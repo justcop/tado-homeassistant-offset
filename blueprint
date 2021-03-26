@@ -1,0 +1,61 @@
+blueprint:
+  name: Tado temperature offset
+  description: Ensure the Tado smart valve has the temp of a separate sensor
+  domain: automation
+  input:
+    source_temp_sensor:
+      name: Source Temperature sensor
+      description: This sensor will be used as the source.
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+    target_tado:
+      name: Tado
+      description: The Tado to set the offset on.
+      selector:
+        entity:
+          domain: climate
+
+variables:
+  target_tado: !input target_tado
+  source_temp_sensor: !input source_temp_sensor
+  tado_temp: "{{ state_attr(target_tado, 'current_temperature') | float }}"
+  current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}"
+  actual_temp: "{{ states(source_temp_sensor) | float }}"
+  offset: "{{ ( actual_temp - tado_temp ) | round }}"
+  calculated_offset: "{{ ( ( actual_temp - tado_temp ) + current_offset ) | round }}"
+
+trigger:
+- platform: state
+  entity_id: !input target_tado
+  attribute: current_temperature
+- platform: state
+  entity_id: !input source_temp_sensor 
+
+condition: "{{ offset != 0 }}"
+
+action:
+- service: system_log.write
+  data:
+    message: >
+      {{ target_tado }} has temp difference of {{ offset }}. Setting offset to {{ calculated_offset }}
+    level: info
+    logger: blueprints.tado.offset
+- service: system_log.write
+  data:
+    message: >
+      target: {{ target_tado }} 
+      source: {{ source_temp_sensor }}
+      temp difference: {{ offset }}
+      actual_temp: {{ actual_temp }}
+      tado_temp: {{ tado_temp }}
+      current_offset: {{ current_offset }}
+      calculated_offset: {{ calculated_offset }}
+    level: debug
+    logger: blueprints.tado.offset
+- service: tado.set_climate_temperature_offset
+  data:
+    offset: "{{ calculated_offset }}"
+    entity_id: "{{ target_tado }}"
+mode: single
