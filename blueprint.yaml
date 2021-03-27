@@ -20,7 +20,6 @@ blueprint:
 variables:
   target_tado: !input target_tado
   source_temp_sensor: !input source_temp_sensor
-  early_start: "binarysensor.!input target_tado|regex_replace("climate.", ignorecase=True)_early_start"
   tado_temp: "{{ state_attr(target_tado, 'current_temperature') | float }}"
   current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}"
   actual_temp: "{{ states(source_temp_sensor) | float }}"
@@ -36,7 +35,7 @@ trigger:
 
 condition: 
 - "{{ offset < 0 }}" # Only trigger if the actual room temperature is lower the temperature tado thinks it is
-- "{{ state_attr(target_tado, 'preset_mode') == "home" or  states(early_start) == "on" }}" # Only trigger if tado in home or early start
+- "{{ state_attr(target_tado, 'preset_mode') == "home" }}" # Only trigger if tado in home or early start
 - "{{ state_attr(target_tado, 'hvac_action') == "idle" }}" #Only trigger if the heating is off
 
 action:
