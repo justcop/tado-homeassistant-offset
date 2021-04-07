@@ -18,9 +18,11 @@ blueprint:
           domain: climate
 
 variables:
+  tolerance: 0.5
   target_tado: !input target_tado
   source_temp_sensor: !input source_temp_sensor
-  early_start: "binary_sensor.!input target_tado|regex_replace("climate.", ignorecase=True)_early_start"
+  room: !input target_tado|regex_replace("climate.", ignorecase=True)"
+  early_start: room.early_start
   tado_temp: "{{ state_attr(target_tado, 'current_temperature') | float }}"
   current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}"
   actual_temp: "{{ states(source_temp_sensor) | float }}"
@@ -29,15 +31,34 @@ variables:
 
 trigger:
 - platform: state
-  entity_id: !input target_tado
+  entity_id: target_tado
   attribute: current_temperature
 - platform: state
-  entity_id: !input source_temp_sensor 
+  entity_id: source_temp_sensor
+  # Because I have a condition to only adjust offset when in home mode, I also want to trigger when I get home to immediately sync temp
+- platform: state
+  entity_id: target_tado
+  attribute: preset_mode
+  to: home
+- platform: state
+  entity_id: target_tado
+  attribute: hvac_action
 
 condition: 
-- "{{ offset < 0 }}" # Only trigger if the actual room temperature is lower the temperature tado thinks it is
-- "{{ state_attr(target_tado, 'preset_mode') == "home" or  states(early_start) == "on" }}" # Only trigger if tado in home or early start
-- "{{ state_attr(target_tado, 'hvac_action') == "idle" }}" #Only trigger if the heating is off
+# Only run if temp states are a number i.e. hasn't become 'unavailable'
+- "tado_temp|int != 0 or tado_temp == '0' }}"
+- "actual_temp|int != 0 or actual_temp == '0' }}"
+# Only run if the climate device is set to 'auto' and preset is 'home'
+- "{{ states(target_tado) == 'auto' and state_attr(target_tado, 'preset_mode') == 'home' }}"
+# Only run if new_offset is different to current offset
+- "{{ offset != 0 }}"
+# Only run if there is a difference in temperature greater than the tolerance
+- "{{ actual_temp - tado_temp > tolerance }}"
+# BATTERY SAVER: The following are if battery saver is set to true for the device
+# Only run if offset hasn't been changed for longer than back_off
+#- "{{ (as_timestamp(last_updated) < as_timestamp(utcnow() - timedelta(seconds=back_off_secs|int))) if battery_saver else true }}"
+# Only change the offset if it is going to make a difference to hvac action (so will send above or below target temp based on current hvac action state)
+#- "{{ ((state_attr(climate_id, 'hvac_action') == 'heating' and new_temp|float >= state_attr(climate_id, 'temperature')|float) or (state_attr(climate_id, 'hvac_action') == 'idle' and new_temp|float <= state_attr(climate_id, 'temperature')|float)) if battery_saver else true }}"
 
 action:
 - service: system_log.write
