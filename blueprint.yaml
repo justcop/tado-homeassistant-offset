@@ -44,8 +44,8 @@ trigger:
 
 condition: 
 # Only run if temp states are a number i.e. hasn't become 'unavailable'
-- "tado_temp|int != 0 or tado_temp == '0' }}"
-- "actual_temp|int != 0 or actual_temp == '0' }}"
+- "{{ tado_temp|int != 0 or tado_temp == '0' }}"
+- "{{ actual_temp|int != 0 or actual_temp == '0' }}"
 # Only run if the climate device is set to 'auto' and preset is 'home'
 - "{{ states(target_tado) == 'auto' and state_attr(target_tado, 'preset_mode') == 'home' }}"
 # Only run if new_offset is different to current offset
