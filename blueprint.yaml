@@ -21,6 +21,7 @@ variables:
   tolerance: 0.5
   target_tado: !input target_tado
   source_temp_sensor: !input source_temp_sensor
+  early_start: ("binary_sensor." ~ target_tado ~ "_early_start")|regex_replace("climate.", ignorecase=True)
   tado_temp: "{{ state_attr(target_tado, 'current_temperature') | float }}"
   current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}"
   actual_temp: "{{ states(source_temp_sensor) | float }}"
