@@ -21,8 +21,8 @@ variables:
   tolerance: 0.5
   target_tado: !input target_tado
   source_temp_sensor: !input source_temp_sensor
-  room: !input target_tado|regex_replace("climate.", ignorecase=True)"
-  early_start: room.early_start
+  #room: !input target_tado|regex_replace("climate.", ignorecase=True)"
+  #early_start: room.early_start
   tado_temp: "{{ state_attr(target_tado, 'current_temperature') | float }}"
   current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}"
   actual_temp: "{{ states(source_temp_sensor) | float }}"
