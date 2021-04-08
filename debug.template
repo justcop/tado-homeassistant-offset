@@ -1,0 +1,38 @@
+{## Imitate available variables: ##}
+{% set tolerance = "0.5"|float  %}
+{% set target_tado = "climate.bedroom"|string  %}
+{% set early_start = ("binary_sensor." ~ target_tado ~ "_early_start")|regex_replace("climate.", ignorecase=True) %}
+{% set source_temp_sensor = "sensor.bedroom_measurement_temperature" %}
+{% set tado_temp = state_attr('climate.bedroom', 'current_temperature') | float  %}
+{% set current_offset =  state_attr(target_tado, 'offset_celsius')  %}
+{% set actual_temp = states(source_temp_sensor) | float %}
+{% set offset = ( actual_temp - tado_temp ) | round %}
+{% set calculated_offset = ( ( actual_temp - tado_temp ) + current_offset ) | round %}
+{% set last_updated = state_attr(source_temp_sensor, 'offset_last_changed') if state_attr(source_temp_sensor, 'offset_last_changed') != None else utcnow() - timedelta(seconds=(900|int +100)) %}
+{{states(early_start) == on }}
+{{ ((state_attr(target_tado, 'hvac_action') == 'heating' and calculated_offset|float >= state_attr(target_tado, 'offset_celsius')|int)) or }}
+{% if tado_temp|int != 0 or tado_temp == '0' %}
+Tado temp measurement is a number?
+{{tado_temp|int != 0 or tado_temp == '0'}}
+{%- endif %}
+{% if actual_temp|int != 0 or actual_temp == '0' %}
+Temp measurement is a number?
+{{actual_temp|int != 0 or actual_temp == '0'}}
+{%- endif %}
+{% if states(target_tado) == 'auto' and state_attr(target_tado, 'preset_mode') == 'home' %}
+States is auto and preset is home?
+{{states(target_tado) == 'auto' and state_attr(target_tado, 'preset_mode') == 'home'}}
+{%- endif %}
+
+
+Tado Temp is {{tado_temp}}
+Actual temp is {{actual_temp}}
+Temp difference is {{offset}}
+Offset is {{calculated_offset}}
+{{ (actual_temp - tado_temp)|abs > tolerance}} - Temp difference is more than tolerance
+{{ offset != 0 }} - Temp difference isn't 0
+{{ states(target_tado) == 'auto' and state_attr(target_tado, 'preset_mode') == 'home' }} - Set to auto and home
+{{ (as_timestamp(utcnow() - timedelta(seconds=900|int))) }}
+{{ (as_timestamp(last_updated) ) }}
+{{ as_timestamp(utcnow())}}
+{{ timedelta(seconds=900|int) }}
