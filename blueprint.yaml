@@ -76,6 +76,7 @@ action:
       tado_temp: {{ tado_temp }}
       current_offset: {{ current_offset }}
       calculated_offset: {{ calculated_offset }}
+      heating_state : {{ state_attr(target_tado, 'hvac_action') }}
     level: debug
     logger: blueprints.tado.offset
 - service: tado.set_climate_temperature_offset
