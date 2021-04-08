@@ -63,13 +63,13 @@ action:
 - service: system_log.write
   data:
     message: >
-      {{ !input target_tado }} has temp difference of {{ offset }}. Setting offset to {{ calculated_offset }}
+      {{ target_tado }} has temp difference of {{ offset }}. Setting offset to {{ calculated_offset }}
     level: info
     logger: blueprints.tado.offset
 - service: system_log.write
   data:
     message: >
-      target: {{ !input target_tado }} 
+      target: {{ target_tado }} 
       source: {{ source_temp_sensor }}
       temp difference: {{ offset }}
       actual_temp: {{ actual_temp }}
