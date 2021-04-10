@@ -30,11 +30,11 @@ variables:
   last_updated: "{{ state_attr(source_temp_sensor, 'offset_last_changed') if state_attr(source_temp_sensor, 'offset_last_changed') != None else utcnow() - timedelta(seconds=(900|int +100)) }}"
 
 trigger:
-- platform: state
-  entity_id: !input target_tado
-  attribute: current_temperature
-- platform: state
-  entity_id: !input source_temp_sensor
+#- platform: state
+#  entity_id: !input target_tado
+#  attribute: current_temperature
+#- platform: state
+#  entity_id: !input source_temp_sensor
   # Because I have a condition to only adjust offset when in home mode, I also want to trigger when I get home to immediately sync temp
 - platform: state
   entity_id: !input target_tado
