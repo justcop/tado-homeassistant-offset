@@ -55,7 +55,7 @@ condition:
 # Only run if there is a difference in temperature greater than the tolerance
 - "{{ (actual_temp - tado_temp)|abs > tolerance }}"
 # Only run if offset hasn't been changed for longer than 15 minutes
-- "{{ (as_timestamp(last_updated) < as_timestamp(utcnow() - timedelta(seconds=900|int))) }}"
+# - "{{ (as_timestamp(last_updated) < as_timestamp(utcnow() - timedelta(seconds=900|int))) }}"
 # Only change the offset if it is going to make a difference to hvac action (so will send above or below target temp based on current hvac action state)
 # - "{{ ((state_attr(target_tado, 'hvac_action') == 'heating' and calculated_offset|float >= state_attr(target_tado, 'offset_celsius')|int) or ((state_attr(target_tado, 'hvac_action') == 'idle' and calculated_offset|float <= state_attr(target_tado, 'offset_celsius')|int)}}"
 
