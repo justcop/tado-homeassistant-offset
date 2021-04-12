@@ -48,8 +48,8 @@ condition:
 # Only run if temp states are a number i.e. hasn't become 'unavailable'
 - "{{ tado_temp|int != 0 or tado_temp == '0' }}"
 - "{{ actual_temp|int != 0 or actual_temp == '0' }}"
-# Only run if the climate device is preset is 'home' or if 'early start' has been activated 
-- "{{ state_attr(target_tado, 'preset_mode') == 'home' or states(early_start) == 'on' }}"
+# Only run if the climate device is preset is 'home' or if 'early start' has been activated or offset is more than a difference of 2
+- "{{ state_attr(target_tado, 'preset_mode') == 'home' or states(early_start) == 'on' or calculated_offset|float >= 2 or or calculated_offset|float <= -2}}"
 # Only run if new offset is different to current offset
 - "{{ offset != 0 }}"
 # Only run if there is a difference in temperature greater than the tolerance
