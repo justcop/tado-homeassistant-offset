@@ -28,7 +28,7 @@ variables:
   raw_offset: "{{ ( actual_temp - tado_temp ) | round }}"
   offset: >
     {% if (state_attr(target_tado, 'temperature')) | float - actual_temp > 1 %}
-    {{raw_offset * 2 | float}}
+    {{raw_offset * 2}}
     {% else %}
     {{raw_offset}}
     {% endif %}
