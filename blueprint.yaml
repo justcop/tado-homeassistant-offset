@@ -26,7 +26,7 @@ variables:
   current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}"
   actual_temp: "{{ states(source_temp_sensor) | float }}"
   raw_offset: "{{ ( actual_temp - tado_temp ) | round }}"
-  offset: "{% if (state_attr(target_tado, 'temperature')) - actual_temp > 1 %}{{raw_offset * 2}}{% else %}{{raw_offset}}{% endif %}"
+  offset: "{% if (state_attr(target_tado, 'temperature')) - actual_temp > 1 %}{{raw_offset * 2 | float}}{%- else %}{{raw_offset}}{%- endif %}"
   calculated_offset: "{{ ( ( actual_temp - tado_temp ) + current_offset ) | round }}"
   last_updated: "{{ state_attr(source_temp_sensor, 'offset_last_changed') if state_attr(source_temp_sensor, 'offset_last_changed') != None else utcnow() - timedelta(seconds=(900|int +100)) }}"
 
@@ -56,7 +56,7 @@ condition:
 # Only run if new offset is different to current offset
 - "{{ offset != 0 }}"
 # Only run if there is a difference in temperature greater than the tolerance
-#- "{{ (actual_temp - tado_temp)|abs > tolerance }}"
+- "{{ (actual_temp - tado_temp)|abs > tolerance }}"
 # Only run if offset hasn't been changed for longer than 15 minutes
 # - "{{ (as_timestamp(last_updated) < as_timestamp(utcnow() - timedelta(seconds=900|int))) }}"
 # Only change the offset if it is going to make a difference to hvac action (so will send above or below target temp based on current hvac action state)
