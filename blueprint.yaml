@@ -45,7 +45,7 @@ trigger:
   entity_id: !input target_tado
   attribute: hvac_action
 - platform: template
-    value_template: "{% if offset|float >= 2 or offset|float <= -2 %}true{% endif %}"
+  value_template: "{% if offset|float >= 2 or offset|float <= -2 %}true{% endif %}"
 
 condition: 
 # Only run if temp states are a number i.e. hasn't become 'unavailable'
