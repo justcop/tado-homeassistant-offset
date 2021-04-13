@@ -26,6 +26,7 @@ variables:
   current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}"
   actual_temp: "{{ states(source_temp_sensor) | float }}"
   offset: "{{ ( actual_temp - tado_temp ) | round }}"
+  offset: "{% if (state_attr(target_tado, 'temperature')) - actual_temp > 1 %}{{offset * 2}}{% endif %}"
   calculated_offset: "{{ ( ( actual_temp - tado_temp ) + current_offset ) | round }}"
   last_updated: "{{ state_attr(source_temp_sensor, 'offset_last_changed') if state_attr(source_temp_sensor, 'offset_last_changed') != None else utcnow() - timedelta(seconds=(900|int +100)) }}"
 
@@ -43,13 +44,15 @@ trigger:
 - platform: state
   entity_id: !input target_tado
   attribute: hvac_action
+- platform: template
+      value_template: "{% if offset|float >= 2 or offset|float <= -2 %}true{% endif %}"
 
 condition: 
 # Only run if temp states are a number i.e. hasn't become 'unavailable'
 - "{{ tado_temp|int != 0 or tado_temp == '0' }}"
 - "{{ actual_temp|int != 0 or actual_temp == '0' }}"
 # Only run if the climate device is preset is 'home' or if 'early start' has been activated or offset is more than a difference of 2
-- "{{ state_attr(target_tado, 'preset_mode') == 'home' or states(early_start) == 'on' or calculated_offset|float >= 2 or calculated_offset|float <= -2}}"
+- "{{ state_attr(target_tado, 'preset_mode') == 'home' or states(early_start) == 'on' or offset|float >= 2 or offset|float <= -2}}"
 # Only run if new offset is different to current offset
 - "{{ offset != 0 }}"
 # Only run if there is a difference in temperature greater than the tolerance
@@ -57,7 +60,7 @@ condition:
 # Only run if offset hasn't been changed for longer than 15 minutes
 # - "{{ (as_timestamp(last_updated) < as_timestamp(utcnow() - timedelta(seconds=900|int))) }}"
 # Only change the offset if it is going to make a difference to hvac action (so will send above or below target temp based on current hvac action state)
-- "{{ ((state_attr(target_tado, 'hvac_action') == 'heating' and calculated_offset|float >= state_attr(target_tado, 'offset_celsius')|int) or ((state_attr(target_tado, 'hvac_action') == 'idle' and calculated_offset|float <= state_attr(target_tado, 'offset_celsius')|int))}}"
+- "{{ ((state_attr(target_tado, 'hvac_action') == 'heating' and calculated_offset|float >= state_attr(target_tado, 'offset_celsius')|int) or ((state_attr(target_tado, 'hvac_action') == 'idle' and offset|float <= state_attr(target_tado, 'offset_celsius')|int))}}"
 
 action:
 - service: system_log.write
