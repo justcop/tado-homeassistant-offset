@@ -26,13 +26,12 @@ variables:
   current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}"
   actual_temp: "{{ states(source_temp_sensor) | float }}"
   raw_offset: "{{ ( actual_temp - tado_temp ) | round }}"
-  offset: >
-    {% if (state_attr(target_tado, 'temperature')) | float - actual_temp > 1 %}
-    {{raw_offset * 2}}
-    {% else %}
-    {{raw_offset}}
-    {% endif %}
-  calculated_offset: "{{ ( ( actual_temp - tado_temp ) + current_offset ) | round }}"
+  {% if ((state_attr(target_tado, 'temperature')) | float) - actual_temp > 1 %}
+  offset: {{raw_offset * 2}}
+  {% else %}
+  offset: {{raw_offset}}
+  {% endif %}
+  calculated_offset: "{{ (( actual_temp - tado_temp ) + current_offset ) | round }}"
   last_updated: "{{ state_attr(source_temp_sensor, 'offset_last_changed') if state_attr(source_temp_sensor, 'offset_last_changed') != None else utcnow() - timedelta(seconds=(900|int +100)) }}"
 
 trigger:
