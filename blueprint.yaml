@@ -18,7 +18,7 @@ blueprint:
           domain: climate
 
 variables:
-  tolerance: 0.5
+  tolerance: 1
   target_tado: !input target_tado
   source_temp_sensor: !input source_temp_sensor
   early_start: ("binary_sensor." ~ target_tado ~ "_early_start")|regex_replace("climate.", ignorecase=True)
@@ -27,8 +27,9 @@ variables:
   tado_real_temp: "{{ ( tado_temp - current_offset) | float }}" # The temperature measured at the tado sensor
   actual_temp: "{{ states(source_temp_sensor) | float }}" # Temperature measured by the other sensor
   offset: "{{ ( actual_temp - tado_temp ) | round }}" # Difference between the two sensors, as they are currently calibrated
-  raw_calculated_offset: "{{ (offset + current_offset ) | round }}" # The offset needed on the tado sensor to best equilibrate the two sensor measurements
-  calculated_offset: "{% if (tado_real_temp - actual_temp) | float > 1 %}{{raw_calculated_offset * 2}}{% else %}{{raw_calculated_offset}}{% endif %}" # If the the tado sensor temperature is alot higher than the other sensor, the double the offset, this causes the tado to aim to overshoot the temperature and reduces the chance of it going on and off many times
+  calculated_offset: "{{ (offset + current_offset ) | round }}" # The offset needed on the tado sensor to best equilibrate the two sensor measurements
+  #raw_calculated_offset: "{{ (offset + current_offset ) | round }}" # The offset needed on the tado sensor to best equilibrate the two sensor measurements
+  #calculated_offset: "{% if (tado_real_temp - actual_temp) | float > 1 %}{{raw_calculated_offset * 2}}{% else %}{{raw_calculated_offset}}{% endif %}" # If the the tado sensor temperature is alot higher than the other sensor, the double the offset, this causes the tado to aim to overshoot the temperature and reduces the chance of it going on and off many times
   last_updated: "{{ state_attr(source_temp_sensor, 'offset_last_changed') if state_attr(source_temp_sensor, 'offset_last_changed') != None else utcnow() - timedelta(seconds=(900|int +100)) }}"
 
 trigger:
