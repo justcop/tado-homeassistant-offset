@@ -21,7 +21,7 @@ variables:
   tolerance: 1
   target_tado: !input target_tado
   source_temp_sensor: !input source_temp_sensor
-  early_start: ("binary_sensor." ~ target_tado ~ "_early_start")|regex_replace("climate.", ignorecase=True)
+  #early_start: ("binary_sensor." ~ target_tado ~ "_early_start")|regex_replace("climate.", ignorecase=True)
   tado_temp: "{{ state_attr(target_tado, 'current_temperature') | float }}" # Temp tado thinks it's at
   current_offset: "{{ state_attr(target_tado, 'offset_celsius') }}" # Tado sensors offset
   tado_real_temp: "{{ ( tado_temp - current_offset) | float }}" # The temperature measured at the tado sensor
@@ -60,7 +60,7 @@ condition:
 # Only run if there is a difference in temperature greater than the tolerance
 - "{{ (actual_temp - tado_temp)|abs > tolerance }}"
 # Only run if offset hasn't been changed for longer than 15 minutes
-- "{{ (as_timestamp(last_updated) < as_timestamp(utcnow() - timedelta(seconds=900|int))) }}"
+- "{{ ( as_timestamp(now()) - as_timestamp(state_attr('this', 'last_triggered')) |int(0) ) > 900 }}"
 # Only change the offset if it is going to make a difference to hvac action (so will send above or below target temp based on current hvac action state)
 - "{{ (state_attr(target_tado, 'hvac_action') == 'heating' and (tado_temp + calculated_offset) >= state_attr(target_tado, 'temperature')|float) or ((state_attr(target_tado, 'hvac_action') == 'idle' and (tado_temp + calculated_offset) <= state_attr(target_tado, 'temperature')|float))}}"
 
